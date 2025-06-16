@@ -7,107 +7,23 @@
   <script src="main.js" defer></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: #0e1a2b;
-      color: #e0f2ff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .container {
-      background: #101e33;
-      padding: 30px;
-      border-radius: 16px;
-      max-width: 400px;
-      width: 100%;
-      box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
-    }
-    h1 {
-      font-size: 24px;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-    .credits {
-      font-size: 14px;
-      text-align: center;
-      margin-bottom: 20px;
-      color: #a6e3ff;
-    }
-    .btn {
-      background-color: #132a4f;
-      color: #e0f2ff;
-      border: 1px solid #3399ff;
-      padding: 14px;
-      width: 100%;
-      margin: 10px 0;
-      border-radius: 12px;
-      font-size: 16px;
-      text-align: left;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .btn:hover {
-      background-color: #1e3a6b;
-    }
-    .styles {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      font-size: 14px;
-      margin-bottom: 16px;
-      color: #cbeaff;
-      padding: 0 5px;
-    }
-    .custom-style {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #88ccff;
-    }
-    .watch-btn {
-      background-color: #ffb347;
-      color: #1a1a1a;
-      font-weight: bold;
-    }
-    .footer {
-      margin-top: 20px;
-      text-align: center;
-      font-size: 12px;
-      color: #88aacc;
-    }
+    /* [your same styles here, unchanged] */
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Welcome to Z-Mini Tools</h1>
-    <div class="credits">
-      🌐 Credits: 3 &nbsp; | &nbsp; ⏰ Reset in 12h
-    </div>
+    <div class="credits">🌐 Credits: 3 &nbsp; | &nbsp; ⏰ Reset in 12h</div>
 
-    <button class="btn">📷 Generate QR Code</button>
-    <button class="btn">📷 Remove Background (2 Cr)</button>
-    <button class="btn">🎨 Create Image (2 Cr)</button>
+    <input id="qrInput" type="text" placeholder="Enter text to generate QR" style="width: 100%; padding: 10px; border-radius: 8px; margin-bottom: 10px;" />
+    <button id="generateQRBtn" class="btn">📷 Generate QR Code</button>
+    <img id="qrImage" style="margin-top: 10px; width: 100%;" />
 
-    <div class="styles">
-      <span>Pixar Style</span>
-      <span>Cyberpunk Glow</span>
-      <span>Anime Portrait</span>
-      <span>Watercolor Painting</span>
-    </div>
+    <input type="file" id="bgInput" accept="image/*" style="margin-top: 10px;" />
+    <button id="removeBgBtn" class="btn">📷 Remove Background (2 Cr)</button>
+    <img id="bgOutput" style="margin-top: 10px; width: 100%;" />
 
-    <div class="custom-style">Custom style</div>
-
-    <button class="btn">📄 Generate PDF (1 Cr)</button>
-    <div class="credits">Image to Image Today: 0/2</div>
-
-    <button class="btn">🎥 Watch an Ad to Get +3</button>
-    <button class="btn watch-btn">Watch an Ad to Get +3 Credits</button>
+    <button id="watchAdBtn" class="btn watch-btn">🎥 Watch an Ad to Get +3 Credits</button>
 
     <div class="footer">Powered by Z-Mini Tools</div>
   </div>
