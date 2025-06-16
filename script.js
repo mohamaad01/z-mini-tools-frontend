@@ -36,17 +36,4 @@ async function watchAdAndGetCredits(userId) {
   });
   return await response.json();
 }
-async function generateQRCode(data) {
-  console.log("→ Sending QR request"); // 🔥 Logging start
-  try {
-    const resp = await fetch(`${BACKEND_URL}/generate_qr`, { ... });
-    console.log("↩️ Response status:", resp.status);
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
-    const blob = await resp.blob();
-    console.log("✅ Blob received", blob);
-    return blob;
-  } catch (err) {
-    console.error("❌ Error in generateQRCode:", err);
-    alert("Error: " + err.message);
-  }
-}
+
