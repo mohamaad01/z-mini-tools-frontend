@@ -41,6 +41,8 @@ async function watchAdAndGetCredits(userId) {
 
 // === DOM Event Bindings ===
 window.addEventListener('DOMContentLoaded', () => {
+console.log("DOM fully loaded!");
+  
   const qrBtn = document.getElementById('generateQRBtn');
   const qrInput = document.getElementById('qrInput');
   const qrImage = document.getElementById('qrImage');
