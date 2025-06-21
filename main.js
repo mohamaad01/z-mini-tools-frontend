@@ -4,17 +4,11 @@ const BACKEND_URL = "https://z-mini-tools.onrender.com";
 async function generateQRCode(data, userId) {
   const response = await fetch(`${BACKEND_URL}/generate_qr`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text: data, user_id: userId }),
   });
 
-  if (!response.ok) {
-    const err = await response.json();
-    throw new Error(err.error || "Failed to generate QR code.");
-  }
-
+  if (!response.ok) throw new Error("Failed to generate QR code.");
   const result = await response.blob();
   return URL.createObjectURL(result);
 }
@@ -30,11 +24,7 @@ async function removeBackground(imageFile, userId) {
     body: formData,
   });
 
-  if (!response.ok) {
-    const err = await response.json();
-    throw new Error(err.error || "Failed to remove background.");
-  }
-
+  if (!response.ok) throw new Error("Failed to remove background.");
   return await response.blob();
 }
 
@@ -42,40 +32,23 @@ async function removeBackground(imageFile, userId) {
 async function watchAdAndGetCredits(userId) {
   const response = await fetch(`${BACKEND_URL}/api/watch-ad`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ user_id: userId }),
   });
 
-  if (!response.ok) {
-    const err = await response.json();
-    throw new Error(err.error || "Failed to update credits.");
+  const text = await response.text();
+  try {
+    const json = JSON.parse(text);
+    if (!response.ok) throw new Error(json.error || "Ad credit failed");
+    return json;
+  } catch (err) {
+    throw new Error("Unexpected server response: " + text);
   }
-
-  return await response.json();
-}
-
-const video = document.getElementById("adVideo");
-video.onended = async function () {
-  alert("Thanks for watching!");
-  const result = await watchAdAndGetCredits(userId);
-  alert("3 Credits added!");
-};
-
-// === Get Credits (Optional) ===
-async function getUserCredits(userId) {
-  const response = await fetch(`${BACKEND_URL}/credits/${userId}`);
-  if (!response.ok) return 0;
-  const data = await response.json();
-  return data.credits;
 }
 
 // === DOM Event Binding ===
-window.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener('DOMContentLoaded', () => {
   console.log("Main JS loaded!");
-
-  const userId = "demo_user"; // 🔐 Replace with actual user logic later
 
   const qrBtn = document.getElementById('generateQRBtn');
   const qrInput = document.getElementById('qrInput');
@@ -86,31 +59,26 @@ window.addEventListener('DOMContentLoaded', async () => {
   const bgOutput = document.getElementById('bgOutput');
 
   const watchAdBtn = document.getElementById('watchAdBtn');
-  const creditDisplay = document.querySelector('.credits');
 
-  // Update credits on load
-  try {
-    const credits = await getUserCredits(userId);
-    if (creditDisplay) creditDisplay.innerHTML = `🌐 Credits: ${credits} &nbsp; | &nbsp; ⏰ Reset in 12h`;
-  } catch {}
+  const userId = "demo_user"; // 🔐 Replace with real user logic
 
-  // QR Generation
+  // Generate QR Code
   qrBtn?.addEventListener('click', async () => {
     try {
-      const text = qrInput.value.trim();
-      if (!text) return alert("Please enter text to generate QR.");
-      const qrUrl = await generateQRCode(text, userId);
+      const data = qrInput.value;
+      if (!data) return alert("Please enter text.");
+      const qrUrl = await generateQRCode(data, userId);
       qrImage.src = qrUrl;
     } catch (err) {
       alert(err.message);
     }
   });
 
-  // Background Removal
+  // Remove Background
   bgBtn?.addEventListener('click', async () => {
     try {
       const file = bgInput.files[0];
-      if (!file) return alert("Please select an image.");
+      if (!file) return alert("Please upload an image.");
       const result = await removeBackground(file, userId);
       bgOutput.src = URL.createObjectURL(result);
     } catch (err) {
@@ -118,11 +86,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Watch Ad to Get Credits
+  // Watch Ad to Earn Credits
   watchAdBtn?.addEventListener('click', async () => {
     try {
-      const res = await watchAdAndGetCredits(userId);
-      alert("🎉 Credits updated! Reloading...");
+      const result = await watchAdAndGetCredits(userId);
+      alert(result.message || "Credits updated!");
       location.reload();
     } catch (err) {
       alert(err.message);
