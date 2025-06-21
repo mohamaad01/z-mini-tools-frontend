@@ -56,6 +56,13 @@ async function watchAdAndGetCredits(userId) {
   return await response.json();
 }
 
+const video = document.getElementById("adVideo");
+video.onended = async function () {
+  alert("Thanks for watching!");
+  const result = await watchAdAndGetCredits(userId);
+  alert("3 Credits added!");
+};
+
 // === Get Credits (Optional) ===
 async function getUserCredits(userId) {
   const response = await fetch(`${BACKEND_URL}/credits/${userId}`);
