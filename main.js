@@ -27,7 +27,7 @@ async function removeBackground(imageFile) {
   return await response.blob();
 }
 
-// === Watch Ad ===
+// === Watch Ad and Get Credits ===
 async function watchAdAndGetCredits(userId) {
   const response = await fetch(`${BACKEND_URL}/api/watch-ad`, {
     method: 'POST',
@@ -45,38 +45,42 @@ window.addEventListener('DOMContentLoaded', () => {
   const qrInput = document.getElementById('qrInput');
   const qrImage = document.getElementById('qrImage');
 
-  qrBtn.addEventListener('click', async () => {
-    const text = qrInput.value.trim();
-    if (!text) return alert("Please enter text to generate QR.");
-    try {
-      const qrUrl = await generateQRCode(text);
-      qrImage.src = qrUrl;
-    } catch (err) {
-      alert(err.message);
-    }
-  });
-
-  const removeBtn = document.getElementById('removeBgBtn');
+  const bgBtn = document.getElementById('removeBgBtn');
   const bgInput = document.getElementById('bgInput');
   const bgOutput = document.getElementById('bgOutput');
 
-  removeBtn.addEventListener('click', async () => {
-    const file = bgInput.files[0];
-    if (!file) return alert("Please select an image file.");
+  const adBtn = document.getElementById('watchAdBtn');
+
+  // QR Code Click
+  qrBtn.addEventListener('click', async () => {
+    const data = qrInput.value.trim();
+    if (!data) return alert("Enter some text to generate QR!");
     try {
-      const result = await removeBackground(file);
-      bgOutput.src = URL.createObjectURL(result);
+      const imageURL = await generateQRCode(data);
+      qrImage.src = imageURL;
     } catch (err) {
       alert(err.message);
     }
   });
 
-  const watchAdBtn = document.getElementById('watchAdBtn');
-  watchAdBtn.addEventListener('click', async () => {
-    const userId = 123; // Replace with Telegram WebApp user ID if available
+  // Background Removal Click
+  bgBtn.addEventListener('click', async () => {
+    const file = bgInput.files[0];
+    if (!file) return alert("Please upload an image first.");
     try {
-      const result = await watchAdAndGetCredits(userId);
-      alert("Credits updated! New credit balance: " + result.credits);
+      const output = await removeBackground(file);
+      bgOutput.src = URL.createObjectURL(output);
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  // Watch Ad Click
+  adBtn.addEventListener('click', async () => {
+    try {
+      const userId = "demo_user"; // Replace with real user ID in future
+      const data = await watchAdAndGetCredits(userId);
+      alert("Ad watched! New credits: " + data.credits);
     } catch (err) {
       alert(err.message);
     }
