@@ -10,7 +10,11 @@ async function generateQRCode(data, userId) {
     body: JSON.stringify({ text: data, user_id: userId }),
   });
 
-  if (!response.ok) throw new Error("Failed to generate QR code.");
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error || "Failed to generate QR code.");
+  }
+
   const result = await response.blob();
   return URL.createObjectURL(result);
 }
@@ -26,7 +30,11 @@ async function removeBackground(imageFile, userId) {
     body: formData,
   });
 
-  if (!response.ok) throw new Error("Failed to remove background.");
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error || "Failed to remove background.");
+  }
+
   return await response.blob();
 }
 
@@ -40,13 +48,27 @@ async function watchAdAndGetCredits(userId) {
     body: JSON.stringify({ user_id: userId }),
   });
 
-  if (!response.ok) throw new Error("Failed to update credits after ad watch.");
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error || "Failed to update credits.");
+  }
+
   return await response.json();
 }
 
-// === DOM Event Binding Example ===
-window.addEventListener('DOMContentLoaded', () => {
+// === Get Credits (Optional) ===
+async function getUserCredits(userId) {
+  const response = await fetch(`${BACKEND_URL}/credits/${userId}`);
+  if (!response.ok) return 0;
+  const data = await response.json();
+  return data.credits;
+}
+
+// === DOM Event Binding ===
+window.addEventListener('DOMContentLoaded', async () => {
   console.log("Main JS loaded!");
+
+  const userId = "demo_user"; // 🔐 Replace with actual user logic later
 
   const qrBtn = document.getElementById('generateQRBtn');
   const qrInput = document.getElementById('qrInput');
@@ -57,26 +79,31 @@ window.addEventListener('DOMContentLoaded', () => {
   const bgOutput = document.getElementById('bgOutput');
 
   const watchAdBtn = document.getElementById('watchAdBtn');
+  const creditDisplay = document.querySelector('.credits');
 
-  const userId = "demo_user"; // 🔐 Replace this with real user ID logic later
+  // Update credits on load
+  try {
+    const credits = await getUserCredits(userId);
+    if (creditDisplay) creditDisplay.innerHTML = `🌐 Credits: ${credits} &nbsp; | &nbsp; ⏰ Reset in 12h`;
+  } catch {}
 
-  // Generate QR Code
+  // QR Generation
   qrBtn?.addEventListener('click', async () => {
     try {
-      const data = qrInput.value;
-      if (!data) return alert("Please enter text.");
-      const qrUrl = await generateQRCode(data, userId);
+      const text = qrInput.value.trim();
+      if (!text) return alert("Please enter text to generate QR.");
+      const qrUrl = await generateQRCode(text, userId);
       qrImage.src = qrUrl;
     } catch (err) {
       alert(err.message);
     }
   });
 
-  // Remove Background
+  // Background Removal
   bgBtn?.addEventListener('click', async () => {
     try {
       const file = bgInput.files[0];
-      if (!file) return alert("Please upload an image.");
+      if (!file) return alert("Please select an image.");
       const result = await removeBackground(file, userId);
       bgOutput.src = URL.createObjectURL(result);
     } catch (err) {
@@ -84,11 +111,11 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Watch Ad
+  // Watch Ad to Get Credits
   watchAdBtn?.addEventListener('click', async () => {
     try {
-      const result = await watchAdAndGetCredits(userId);
-      alert("Credits updated!");
+      const res = await watchAdAndGetCredits(userId);
+      alert("🎉 Credits updated! Reloading...");
       location.reload();
     } catch (err) {
       alert(err.message);
