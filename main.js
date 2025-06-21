@@ -2,7 +2,7 @@ const BACKEND_URL = "https://z-mini-tools.onrender.com";
 
 // === QR Code Generation ===
 async function generateQRCode(data) {
-  const response = await fetch(`${BACKEND_URL}/api/qr`, {
+  const response = await fetch(`${BACKEND_URL}/generate_qr`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ data }),
