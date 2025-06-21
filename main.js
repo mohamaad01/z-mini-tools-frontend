@@ -1,11 +1,13 @@
 const BACKEND_URL = "https://z-mini-tools.onrender.com";
 
 // === QR Code Generation ===
-async function generateQRCode(data) {
+async function generateQRCode(data, userId) {
   const response = await fetch(`${BACKEND_URL}/generate_qr`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ data }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ text: data, user_id: userId }),
   });
 
   if (!response.ok) throw new Error("Failed to generate QR code.");
@@ -14,11 +16,12 @@ async function generateQRCode(data) {
 }
 
 // === Background Removal ===
-async function removeBackground(imageFile) {
+async function removeBackground(imageFile, userId) {
   const formData = new FormData();
   formData.append('image', imageFile);
+  formData.append('user_id', userId);
 
-  const response = await fetch(`${BACKEND_URL}/api/remove-bg`, {
+  const response = await fetch(`${BACKEND_URL}/remove_bg`, {
     method: 'POST',
     body: formData,
   });
@@ -27,11 +30,13 @@ async function removeBackground(imageFile) {
   return await response.blob();
 }
 
-// === Watch Ad and Get Credits ===
+// === Watch Ad for Credits ===
 async function watchAdAndGetCredits(userId) {
   const response = await fetch(`${BACKEND_URL}/api/watch-ad`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({ user_id: userId }),
   });
 
@@ -39,10 +44,10 @@ async function watchAdAndGetCredits(userId) {
   return await response.json();
 }
 
-// === DOM Event Bindings ===
+// === DOM Event Binding Example ===
 window.addEventListener('DOMContentLoaded', () => {
-console.log("DOM fully loaded!");
-  
+  console.log("Main JS loaded!");
+
   const qrBtn = document.getElementById('generateQRBtn');
   const qrInput = document.getElementById('qrInput');
   const qrImage = document.getElementById('qrImage');
@@ -51,38 +56,40 @@ console.log("DOM fully loaded!");
   const bgInput = document.getElementById('bgInput');
   const bgOutput = document.getElementById('bgOutput');
 
-  const adBtn = document.getElementById('watchAdBtn');
+  const watchAdBtn = document.getElementById('watchAdBtn');
 
-  // QR Code Click
-  qrBtn.addEventListener('click', async () => {
-    const data = qrInput.value.trim();
-    if (!data) return alert("Enter some text to generate QR!");
+  const userId = "demo_user"; // 🔐 Replace this with real user ID logic later
+
+  // Generate QR Code
+  qrBtn?.addEventListener('click', async () => {
     try {
-      const imageURL = await generateQRCode(data);
-      qrImage.src = imageURL;
+      const data = qrInput.value;
+      if (!data) return alert("Please enter text.");
+      const qrUrl = await generateQRCode(data, userId);
+      qrImage.src = qrUrl;
     } catch (err) {
       alert(err.message);
     }
   });
 
-  // Background Removal Click
-  bgBtn.addEventListener('click', async () => {
-    const file = bgInput.files[0];
-    if (!file) return alert("Please upload an image first.");
+  // Remove Background
+  bgBtn?.addEventListener('click', async () => {
     try {
-      const output = await removeBackground(file);
-      bgOutput.src = URL.createObjectURL(output);
+      const file = bgInput.files[0];
+      if (!file) return alert("Please upload an image.");
+      const result = await removeBackground(file, userId);
+      bgOutput.src = URL.createObjectURL(result);
     } catch (err) {
       alert(err.message);
     }
   });
 
-  // Watch Ad Click
-  adBtn.addEventListener('click', async () => {
+  // Watch Ad
+  watchAdBtn?.addEventListener('click', async () => {
     try {
-      const userId = "demo_user"; // Replace with real user ID in future
-      const data = await watchAdAndGetCredits(userId);
-      alert("Ad watched! New credits: " + data.credits);
+      const result = await watchAdAndGetCredits(userId);
+      alert("Credits updated!");
+      location.reload();
     } catch (err) {
       alert(err.message);
     }
