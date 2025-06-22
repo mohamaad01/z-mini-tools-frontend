@@ -1,267 +1,284 @@
 const BACKEND_URL = "https://z-mini-tools.onrender.com";
-        const userId = "demo_user"; // Replace with Telegram user ID
+const userId = "demo_user"; // 🔐 In a real app, this should be dynamically set by Telegram.
 
-        // Initialize Telegram WebApp
-        let tg = window.Telegram?.WebApp;
-        if (tg) {
-            tg.ready();
-            tg.MainButton.hide();
+// === Utility Functions ===
+const showAlert = (message) => alert(message);
+const showLoading = (element, show = true) => {
+    if (element) {
+        element.style.opacity = show ? '0.5' : '1';
+        element.style.pointerEvents = show ? 'none' : 'auto';
+    }
+};
+
+// === API Communication ===
+
+async function fetchUserStatus(userId) {
+    const response = await fetch(`${BACKEND_URL}/credits/${userId}`);
+    if (!response.ok) throw new Error("Could not fetch user status.");
+    return await response.json();
+}
+
+/**
+ * Generates a QR code from the given text data.
+ */
+async function generateQRCode(data, userId) {
+  const response = await fetch(`${BACKEND_URL}/generate_qr`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: data, user_id: userId }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to generate QR code.");
+  }
+  return URL.createObjectURL(await response.blob());
+}
+
+/**
+ * Removes the background from an uploaded image.
+ */
+async function removeBackground(imageFile, userId) {
+  const formData = new FormData();
+  formData.append('image', imageFile);
+  formData.append('user_id', userId);
+
+  const response = await fetch(`${BACKEND_URL}/remove_bg`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to remove background.");
+   }
+  return await response.blob();
+}
+
+/**
+ * Creates a new image based on an input image and a style.
+ */
+async function createImageFromImage(imageFile, style, customStyle, userId) {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    formData.append('style', style === 'custom' ? customStyle : style);
+    formData.append('user_id', userId);
+
+    const response = await fetch(`${BACKEND_URL}/image_to_image`, {
+        method: 'POST',
+        body: formData,
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create image.");
+    }
+    return await response.blob();
+}
+
+/**
+ * Converts an uploaded image to a PDF document.
+ */
+async function generatePdf(imageFile, userId) {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    formData.append('user_id', userId);
+
+    const response = await fetch(`${BACKEND_URL}/image_to_pdf`, {
+        method: 'POST',
+        body: formData,
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to generate PDF.");
+    }
+    return await response.blob();
+}
+
+/**
+ * Generates a ZIP file of QR codes from a CSV file.
+ */
+async function generateBulkQr(csvFile, userId) {
+    const formData = new FormData();
+    formData.append('csv_file', csvFile);
+    formData.append('user_id', userId);
+
+    const response = await fetch(`${BACKEND_URL}/bulk_generate_qr`, {
+        method: 'POST',
+        body: formData,
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to generate bulk QR codes.");
+    }
+    return await response.blob();
+}
+
+
+/**
+ * Requests credits from watching an ad.
+ */
+async function watchAdAndGetCredits(userId) {
+  const response = await fetch(`${BACKEND_URL}/api/watch-ad`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: userId }),
+  });
+
+  if (!response.ok) {
+      throw new Error("Ad credit failed");
+  }
+  return await response.json();
+}
+
+// === DOM Event Logic ===
+window.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM loaded. Initializing...");
+
+    // --- Element Selectors ---
+    const creditCountEl = document.getElementById('creditCount');
+    const img2imgCountEl = document.getElementById('img2imgCount');
+    
+    const qrInput = document.getElementById('qrInput');
+    const generateQRBtn = document.getElementById('generateQRBtn');
+    const qrImage = document.getElementById('qrImage');
+
+    const bgInput = document.getElementById('bgInput');
+    const bgOutput = document.getElementById('bgOutput');
+
+    const imageToImageInput = document.getElementById('imageToImageInput');
+    const styleSelect = document.getElementById('styleSelect');
+    const customStyleInput = document.getElementById('customStyleInput');
+    const imageToImageOutput = document.getElementById('imageToImageOutput');
+
+    const pdfInput = document.getElementById('pdfInput');
+    const pdfOutputLink = document.getElementById('pdfOutputLink');
+    
+    const bulkQrInput = document.getElementById('bulkQrCsv');
+    const bulkQrOutputLink = document.getElementById('bulkQrOutputLink');
+
+    const watchAdBtn = document.getElementById('watchAdBtn');
+
+    // --- Load Initial User Status ---
+    const loadUserStatus = async () => {
+        try {
+            const status = await fetchUserStatus(userId);
+            if (creditCountEl) creditCountEl.textContent = status.credits;
+            if (img2imgCountEl) img2imgCountEl.textContent = status.img2img_count;
+        } catch (err) {
+            showAlert(err.message);
         }
+    };
 
-        // Utility functions
-        function showLoading(elementId) {
-            document.getElementById(elementId).style.display = 'block';
+    // --- Event Listeners ---
+    generateQRBtn?.addEventListener('click', async () => {
+        const data = qrInput.value;
+        if (!data) return showAlert("Please enter text to generate a QR code.");
+        showLoading(generateQRBtn);
+        try {
+            const qrUrl = await generateQRCode(data, userId);
+            qrImage.src = qrUrl;
+            qrImage.style.display = 'block';
+            await loadUserStatus();
+        } catch (err) {
+            showAlert(err.message);
+        } finally {
+            showLoading(generateQRBtn, false);
         }
+    });
 
-        function hideLoading(elementId) {
-            document.getElementById(elementId).style.display = 'none';
+    bgInput?.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const label = document.querySelector('label[for="bgInput"]');
+        showLoading(label);
+        try {
+            const resultBlob = await removeBackground(file, userId);
+            bgOutput.src = URL.createObjectURL(resultBlob);
+            bgOutput.style.display = 'block';
+            await loadUserStatus();
+        } catch (err) {
+            showAlert(err.message);
+        } finally {
+            showLoading(label, false);
         }
+    });
 
-        function showError(message, parentElement) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = message;
-            parentElement.appendChild(errorDiv);
-            setTimeout(() => errorDiv.remove(), 5000);
+    imageToImageInput?.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const style = styleSelect.value;
+        const customStyle = customStyleInput.value;
+        if (style === 'custom' && !customStyle) return showAlert("Please enter a custom style prompt.");
+        const label = document.querySelector('label[for="imageToImageInput"]');
+        showLoading(label);
+        try {
+            const resultBlob = await createImageFromImage(file, style, customStyle, userId);
+            imageToImageOutput.src = URL.createObjectURL(resultBlob);
+            imageToImageOutput.style.display = 'block';
+            await loadUserStatus();
+        } catch (err) {
+            showAlert(err.message);
+        } finally {
+            showLoading(label, false);
         }
+    });
 
-        function showSuccess(message, parentElement) {
-            const successDiv = document.createElement('div');
-            successDiv.className = 'success-message';
-            successDiv.textContent = message;
-            parentElement.appendChild(successDiv);
-            setTimeout(() => successDiv.remove(), 3000);
+    pdfInput?.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const label = document.querySelector('label[for="pdfInput"]');
+        showLoading(label);
+        try {
+            const pdfBlob = await generatePdf(file, userId);
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            pdfOutputLink.href = pdfUrl;
+            pdfOutputLink.textContent = "Download PDF";
+            pdfOutputLink.download = `z-mini-tool-${Date.now()}.pdf`;
+            pdfOutputLink.style.display = 'block';
+            await loadUserStatus();
+        } catch (err) {
+            showAlert(err.message);
+        } finally {
+            showLoading(label, false);
         }
-
-        // Load user credits
-        async function loadCredits() {
-            try {
-                const response = await fetch(`${BACKEND_URL}/credits/${userId}`);
-                const data = await response.json();
-                document.getElementById('creditsDisplay').textContent = `💎 Credits: ${data.credits}`;
-            } catch (error) {
-                document.getElementById('creditsDisplay').textContent = '💎 Credits: Error';
-            }
+    });
+    
+    bulkQrInput?.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const label = document.querySelector('label[for="bulkQrCsv"]');
+        showLoading(label);
+        try {
+            const zipBlob = await generateBulkQr(file, userId);
+            const zipUrl = URL.createObjectURL(zipBlob);
+            bulkQrOutputLink.href = zipUrl;
+            bulkQrOutputLink.textContent = "Download Bulk QR ZIP";
+            bulkQrOutputLink.download = `z-mini-bulk-qr-${Date.now()}.zip`;
+            bulkQrOutputLink.style.display = 'block';
+            await loadUserStatus();
+        } catch (err) {
+            showAlert(err.message);
+        } finally {
+            showLoading(label, false);
         }
+    });
 
-        // QR Code Generation
-        async function generateQRCode() {
-            const input = document.getElementById('qrInput');
-            const btn = document.getElementById('generateQRBtn');
-            const img = document.getElementById('qrImage');
-            
-            if (!input.value.trim()) {
-                showError('Please enter text or URL', input.parentElement);
-                return;
-            }
-
-            btn.disabled = true;
-            showLoading('qrLoading');
-
-            try {
-                const response = await fetch(`${BACKEND_URL}/generate_qr`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: input.value, user_id: userId })
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to generate QR code');
-                }
-
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                img.src = url;
-                img.style.display = 'block';
-                
-                showSuccess('QR code generated successfully!', input.parentElement);
-                await loadCredits();
-            } catch (error) {
-                showError(error.message, input.parentElement);
-            } finally {
-                btn.disabled = false;
-                hideLoading('qrLoading');
-            }
+    watchAdBtn?.addEventListener('click', async () => {
+        showLoading(watchAdBtn);
+        try {
+            const result = await watchAdAndGetCredits(userId);
+            showAlert(result.message || "Credits updated!");
+            await loadUserStatus();
+        } catch (err) {
+            showAlert(err.message);
+        } finally {
+            showLoading(watchAdBtn, false);
         }
+    });
 
-        // Background Removal
-        async function removeBackground() {
-            const input = document.getElementById('bgInput');
-            const btn = document.getElementById('removeBgBtn');
-            const img = document.getElementById('bgOutput');
-            
-            if (!input.files[0]) {
-                showError('Please select an image', input.parentElement);
-                return;
-            }
-
-            btn.disabled = true;
-            showLoading('bgLoading');
-
-            try {
-                const formData = new FormData();
-                formData.append('image', input.files[0]);
-                formData.append('user_id', userId);
-
-                const response = await fetch(`${BACKEND_URL}/remove_bg`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to remove background');
-                }
-
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                img.src = url;
-                img.style.display = 'block';
-                
-                showSuccess('Background removed successfully!', input.parentElement);
-                await loadCredits();
-            } catch (error) {
-                showError(error.message, input.parentElement);
-            } finally {
-                btn.disabled = false;
-                hideLoading('bgLoading');
-            }
-        }
-
-        // Image to PDF
-        async function convertToPDF() {
-            const input = document.getElementById('pdfInput');
-            const btn = document.getElementById('convertPdfBtn');
-            const result = document.getElementById('pdfResult');
-            
-            if (!input.files[0]) {
-                showError('Please select an image', input.parentElement);
-                return;
-            }
-
-            btn.disabled = true;
-            showLoading('pdfLoading');
-
-            try {
-                const formData = new FormData();
-                formData.append('image', input.files[0]);
-                formData.append('user_id', userId);
-
-                const response = await fetch(`${BACKEND_URL}/image_to_pdf`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to convert to PDF');
-                }
-
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                
-                const downloadLink = document.createElement('a');
-                downloadLink.href = url;
-                downloadLink.download = 'converted.pdf';
-                downloadLink.className = 'btn';
-                downloadLink.textContent = '📥 Download PDF';
-                downloadLink.style.display = 'inline-block';
-                downloadLink.style.marginTop = '10px';
-                
-                result.innerHTML = '';
-                result.appendChild(downloadLink);
-                
-                showSuccess('PDF created successfully!', input.parentElement);
-                await loadCredits();
-            } catch (error) {
-                showError(error.message, input.parentElement);
-            } finally {
-                btn.disabled = false;
-                hideLoading('pdfLoading');
-            }
-        }
-
-        // AI Image Transform
-        async function transformImage() {
-            const input = document.getElementById('aiInput');
-            const btn = document.getElementById('transformBtn');
-            const img = document.getElementById('aiOutput');
-            
-            if (!input.files[0]) {
-                showError('Please select an image', input.parentElement);
-                return;
-            }
-
-            btn.disabled = true;
-            showLoading('aiLoading');
-
-            try {
-                const formData = new FormData();
-                formData.append('image', input.files[0]);
-                formData.append('user_id', userId);
-
-                const response = await fetch(`${BACKEND_URL}/image_to_image`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to transform image');
-                }
-
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                img.src = url;
-                img.style.display = 'block';
-                
-                showSuccess('Image transformed successfully!', input.parentElement);
-                await loadCredits();
-            } catch (error) {
-                showError(error.message, input.parentElement);
-            } finally {
-                btn.disabled = false;
-                hideLoading('aiLoading');
-            }
-        }
-
-        // Watch Ad
-        async function watchAd() {
-            const btn = document.getElementById('watchAdBtn');
-            btn.disabled = true;
-            btn.textContent = 'Processing...';
-
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/watch-ad`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId })
-                });
-
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to process ad');
-                }
-
-                showSuccess(data.message || '3 credits added!', btn.parentElement);
-                await loadCredits();
-            } catch (error) {
-                showError(error.message, btn.parentElement);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Watch Ad (+3 Credits)';
-            }
-        }
-
-        // Event Listeners
-        document.addEventListener('DOMContentLoaded', () => {
-            loadCredits();
-            
-            document.getElementById('generateQRBtn').addEventListener('click', generateQRCode);
-            document.getElementById('removeBgBtn').addEventListener('click', removeBackground);
-            document.getElementById('convertPdfBtn').addEventListener('click', convertToPDF);
-            document.getElementById('transformBtn').addEventListener('click', transformImage);
-            document.getElementById('watchAdBtn').addEventListener('click', watchAd);
-        });
+    // --- Initial Load ---
+    loadUserStatus();
+});
