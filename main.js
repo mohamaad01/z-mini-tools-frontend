@@ -1,5 +1,4 @@
-  <script>
-        const BACKEND_URL = "https://z-mini-tools.onrender.com";
+const BACKEND_URL = "https://z-mini-tools.onrender.com";
         const userId = "demo_user"; // Replace with Telegram user ID
 
         // Initialize Telegram WebApp
@@ -266,6 +265,3 @@
             document.getElementById('transformBtn').addEventListener('click', transformImage);
             document.getElementById('watchAdBtn').addEventListener('click', watchAd);
         });
-    </script>
-</body>
-</html>
