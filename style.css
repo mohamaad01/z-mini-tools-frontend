@@ -1,0 +1,196 @@
+/* === Imports & Variables === */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
+
+:root {
+  --bg-color: #0d0e1b;
+  --primary-color: #00c2ff;
+  --secondary-color: #1a1c2e;
+  --accent-color: #ffab00;
+  --text-color: #ffffff;
+  --text-muted-color: #a0a8b2;
+  --border-radius: 12px;
+  --glow-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color);
+}
+
+/* === Global Styles === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* === Main Container === */
+.container {
+  width: 100%;
+  max-width: 420px;
+  background-color: var(--secondary-color);
+  border: 1px solid var(--primary-color);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  box-shadow: var(--glow-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* === Header & Credits === */
+header {
+  text-align: center;
+}
+
+h1 {
+  font-size: 2em;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 8px;
+}
+
+.credits-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  background-color: rgba(0, 194, 255, 0.1);
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: var(--text-muted-color);
+  font-size: 0.9em;
+}
+
+.credits-info i {
+  color: var(--primary-color);
+}
+
+/* === Buttons & Inputs === */
+.tool-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn, .input-field {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--primary-color);
+  background-color: transparent;
+  color: var(--text-color);
+  font-family: 'Poppins', sans-serif;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn:hover {
+  background-color: var(--primary-color);
+  color: var(--bg-color);
+  box-shadow: var(--glow-shadow);
+}
+
+.btn .credit-cost {
+  color: var(--text-muted-color);
+  font-size: 0.8em;
+  margin-left: auto;
+}
+
+.btn:hover .credit-cost {
+    color: var(--bg-color);
+}
+
+.input-field {
+  background-color: var(--bg-color);
+  cursor: text;
+}
+
+.input-field::placeholder {
+  color: var(--text-muted-color);
+}
+
+/* === Image Styles Section === */
+.style-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  text-align: center;
+}
+
+.style-label {
+  color: var(--text-muted-color);
+  padding: 10px;
+  border: 1px dashed var(--secondary-color);
+  border-radius: 8px;
+}
+
+/* === Special Buttons === */
+#watchAdBtn {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: var(--bg-color);
+  font-weight: 600;
+}
+
+#watchAdBtn:hover {
+  box-shadow: 0 0 10px var(--accent-color), 0 0 20px var(--accent-color);
+}
+
+/* === Outputs & Footer === */
+.output-area {
+  display: none; /* Hidden by default */
+  margin-top: 10px;
+  width: 100%;
+  border-radius: var(--border-radius);
+}
+
+.output-link {
+    display: none; /* Hidden by default */
+    text-align: center;
+    margin-top: 10px;
+    color: var(--accent-color);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.status-text {
+  text-align: center;
+  color: var(--text-muted-color);
+  font-size: 0.9em;
+}
+
+footer {
+  text-align: center;
+  color: var(--text-muted-color);
+  font-size: 0.8em;
+  margin-top: 16px;
+}
+
+/* === File Inputs (Hidden) === */
+input[type="file"] {
+  display: none;
+}
+
+/* Forcing specific styles onto selects for consistency */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2300C2FF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 0.65em auto;
+} 
