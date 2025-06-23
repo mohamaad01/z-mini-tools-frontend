@@ -1,5 +1,8 @@
 const BACKEND_URL = "https://z-mini-tools.onrender.com";
-const userId = "demo_user"; // 🔐 In a real app, this should be dynamically set by Telegram.
+let userId = "demo_user"; // fallback for local testing
+
+if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user && window.Telegram.WebApp.initDataUnsafe.user.id) {
+    userId = window.Telegram.WebApp.initDataUnsafe.user.id;
 
 // === Utility Functions ===
 const showAlert = (message) => alert(message);
