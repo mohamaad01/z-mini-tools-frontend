@@ -1,8 +1,31 @@
 const BACKEND_URL = "https://z-mini-tools.onrender.com";
-let userId = "demo_user"; // fallback for local testing
 
-if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user && window.Telegram.WebApp.initDataUnsafe.user.id) {
-    userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+// === User ID Management ===
+/**
+ * Generates a unique user ID for the current session.
+ * Uses Telegram WebApp user ID if available, otherwise generates a random ID and stores it in localStorage.
+ * @returns {string} The user ID for the current session
+ */
+function getUserId() {
+    // Check if we're in Telegram WebApp and have user data
+    if (window.Telegram && 
+        window.Telegram.WebApp && 
+        window.Telegram.WebApp.initDataUnsafe && 
+        window.Telegram.WebApp.initDataUnsafe.user && 
+        window.Telegram.WebApp.initDataUnsafe.user.id) {
+        return window.Telegram.WebApp.initDataUnsafe.user.id.toString();
+    }
+    
+    // Check if we have a stored user ID in localStorage
+    let storedUserId = localStorage.getItem('user_id');
+    if (storedUserId) {
+        return storedUserId;
+    }
+    
+    // Generate a new random user ID and store it
+    const newUserId = 'user_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+    localStorage.setItem('user_id', newUserId);
+    return newUserId;
 }
 
 // === Utility Functions ===
@@ -16,7 +39,8 @@ const showLoading = (element, show = true) => {
 
 // === API Communication ===
 
-async function fetchUserStatus(userId) {
+async function fetchUserStatus() {
+    const userId = getUserId();
     const response = await fetch(`${BACKEND_URL}/credits/${userId}`);
     if (!response.ok) throw new Error("Could not fetch user status.");
     return await response.json();
@@ -25,7 +49,8 @@ async function fetchUserStatus(userId) {
 /**
  * Generates a QR code from the given text data.
  */
-async function generateQRCode(data, userId) {
+async function generateQRCode(data) {
+  const userId = getUserId();
   const response = await fetch(`${BACKEND_URL}/generate_qr`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -42,7 +67,8 @@ async function generateQRCode(data, userId) {
 /**
  * Removes the background from an uploaded image.
  */
-async function removeBackground(imageFile, userId) {
+async function removeBackground(imageFile) {
+  const userId = getUserId();
   const formData = new FormData();
   formData.append('image', imageFile);
   formData.append('user_id', userId);
@@ -62,7 +88,8 @@ async function removeBackground(imageFile, userId) {
 /**
  * Creates a new image based on an input image and a style.
  */
-async function createImageFromImage(imageFile, style, customStyle, userId) {
+async function createImageFromImage(imageFile, style, customStyle) {
+    const userId = getUserId();
     const formData = new FormData();
     formData.append('image', imageFile);
     formData.append('style', style === 'custom' ? customStyle : style);
@@ -83,7 +110,8 @@ async function createImageFromImage(imageFile, style, customStyle, userId) {
 /**
  * Converts an uploaded image to a PDF document.
  */
-async function generatePdf(imageFile, userId) {
+async function generatePdf(imageFile) {
+    const userId = getUserId();
     const formData = new FormData();
     formData.append('image', imageFile);
     formData.append('user_id', userId);
@@ -103,7 +131,8 @@ async function generatePdf(imageFile, userId) {
 /**
  * Generates a ZIP file of QR codes from a CSV file.
  */
-async function generateBulkQr(csvFile, userId) {
+async function generateBulkQr(csvFile) {
+    const userId = getUserId();
     const formData = new FormData();
     formData.append('csv_file', csvFile);
     formData.append('user_id', userId);
@@ -120,11 +149,11 @@ async function generateBulkQr(csvFile, userId) {
     return await response.blob();
 }
 
-
 /**
  * Requests credits from watching an ad.
  */
-async function watchAdAndGetCredits(userId) {
+async function watchAdAndGetCredits() {
+  const userId = getUserId();
   const response = await fetch(`${BACKEND_URL}/api/watch-ad`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -140,6 +169,7 @@ async function watchAdAndGetCredits(userId) {
 // === DOM Event Logic ===
 window.addEventListener('DOMContentLoaded', () => {
     console.log("DOM loaded. Initializing...");
+    console.log("User ID:", getUserId()); // Log the user ID for debugging
 
     // --- Element Selectors ---
     const creditCountEl = document.getElementById('creditCount');
@@ -168,7 +198,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // --- Load Initial User Status ---
     const loadUserStatus = async () => {
         try {
-            const status = await fetchUserStatus(userId);
+            const status = await fetchUserStatus();
             if (creditCountEl) creditCountEl.textContent = status.credits;
             if (img2imgCountEl) img2imgCountEl.textContent = status.img2img_count;
         } catch (err) {
@@ -182,7 +212,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (!data) return showAlert("Please enter text to generate a QR code.");
         showLoading(generateQRBtn);
         try {
-            const qrUrl = await generateQRCode(data, userId);
+            const qrUrl = await generateQRCode(data);
             qrImage.src = qrUrl;
             qrImage.style.display = 'block';
             await loadUserStatus();
@@ -199,7 +229,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const label = document.querySelector('label[for="bgInput"]');
         showLoading(label);
         try {
-            const resultBlob = await removeBackground(file, userId);
+            const resultBlob = await removeBackground(file);
             bgOutput.src = URL.createObjectURL(resultBlob);
             bgOutput.style.display = 'block';
             await loadUserStatus();
@@ -219,7 +249,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const label = document.querySelector('label[for="imageToImageInput"]');
         showLoading(label);
         try {
-            const resultBlob = await createImageFromImage(file, style, customStyle, userId);
+            const resultBlob = await createImageFromImage(file, style, customStyle);
             imageToImageOutput.src = URL.createObjectURL(resultBlob);
             imageToImageOutput.style.display = 'block';
             await loadUserStatus();
@@ -236,7 +266,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const label = document.querySelector('label[for="pdfInput"]');
         showLoading(label);
         try {
-            const pdfBlob = await generatePdf(file, userId);
+            const pdfBlob = await generatePdf(file);
             const pdfUrl = URL.createObjectURL(pdfBlob);
             pdfOutputLink.href = pdfUrl;
             pdfOutputLink.textContent = "Download PDF";
@@ -256,7 +286,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const label = document.querySelector('label[for="bulkQrCsv"]');
         showLoading(label);
         try {
-            const zipBlob = await generateBulkQr(file, userId);
+            const zipBlob = await generateBulkQr(file);
             const zipUrl = URL.createObjectURL(zipBlob);
             bulkQrOutputLink.href = zipUrl;
             bulkQrOutputLink.textContent = "Download Bulk QR ZIP";
@@ -273,7 +303,7 @@ window.addEventListener('DOMContentLoaded', () => {
     watchAdBtn?.addEventListener('click', async () => {
         showLoading(watchAdBtn);
         try {
-            const result = await watchAdAndGetCredits(userId);
+            const result = await watchAdAndGetCredits();
             showAlert(result.message || "Credits updated!");
             await loadUserStatus();
         } catch (err) {
